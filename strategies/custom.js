@@ -16,47 +16,46 @@ var strat = {};
 // Prepare everything our method needs
 strat.init = function() {
   this.input = 'candle';
-  this.currentTrend = 'long';
-  this.requiredHistory = 0;
+  this.requiredHistory = this.tradingAdvisor.historySize
+  this.percentageSinceBreak = this.settings.percentageSinceBreak
+  this.history = []
+  this.length = 24
+  this.min = null
 }
 
 // What happens on every new candle?
 strat.update = function(candle) {
+  if(!this.min) this.min = candle.close
 
-  // Get a random number between 0 and 1.
-  this.randomNumber = Math.random();
+  this.history.push(candle.close)
+  this.history = this.history.splice(-this.length)
+  for (let i = 0; i < this.history.length - 3; i++) {
 
-  // There is a 10% chance it is smaller than 0.1
-  this.toUpdate = this.randomNumber < 0.1;
+    if(this.history[i+3]/this.history[i] > 1.08){
+      this.min = this.history[i]
+    }
+  }
 }
 
 // For debugging purposes.
 strat.log = function() {
-  log.debug('calculated random number:');
-  log.debug('\t', this.randomNumber.toFixed(3));
+
 }
 
 // Based on the newly calculated
 // information, check if we should
 // update or not.
-strat.check = function() {
+strat.check = function(candle) {
 
-  // Only continue if we have a new update.
-  if(!this.toUpdate)
-    return;
+  if(this.currentTrend !== 'long' && candle.close / this.min < this.percentageSinceBreak) {
+    this.advice('long')
+    this.currentTrend = 'long'
+    this.targetPrice = this.min
+  }
 
-  if(this.currentTrend === 'long') {
-
-    // If it was long, set it to short
-    this.currentTrend = 'short';
-    this.advice('short');
-
-  } else {
-
-    // If it was short, set it to long
-    this.currentTrend = 'long';
-    this.advice('long');
-
+  if(this.currentTrend === 'long' && (this.targetPrice <= candle.close)) {
+    this.advice('short')
+    this.currentTrend = 'short'
   }
 }
 
