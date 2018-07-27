@@ -297,14 +297,15 @@ Base.prototype.addIndicator = function(name, type, parameters) {
 }
 
 Base.prototype.advice = function(newPosition, _candle) {
+
   // ignore soft advice coming from legacy
   // strategies.
   if(!newPosition)
     return;
 
   // ignore if advice equals previous advice
-  if(newPosition === this._prevAdvice)
-    return;
+  //if(newPosition === this._prevAdvice)
+    //return;
 
   // cache the candle this advice is based on
   if(_candle)
